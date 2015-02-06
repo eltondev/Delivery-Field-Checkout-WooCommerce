@@ -1,0 +1,60 @@
+/*
+* Elton Pereira - eltondeveloper@gmail.com
+* Delivery Field Checkout WooCommerce
+*/
+
+
+//New Field
+add_filter( 'woocommerce_checkout_fields' , 'delivery_order_checkout_fields' );
+function delivery_order_checkout_fields( $fields ) {
+	$fields['billing']['billing_delivery'] = array(
+			'label'     => __('Dia da Entrega', 'woocommerce'),
+			'placeholder'   => _x('Selecione', 'placeholder', 'woocommerce'),
+			'required'    => true,
+			'clear'       => false,
+			'type'        => 'select',
+			'class'       => array('form-row-wide'),
+			'options'     => array(
+					'Quinta - Feira' => __('Quinta - Feira', 'woocommerce' ),
+					'Sexta - Feira' => __('Sexta - Feira', 'woocommerce' )
+			)
+	);
+
+	return $fields;
+}
+
+
+
+//validate
+add_action('woocommerce_checkout_process', 'validate_delivery_order_checkout_fields');
+function validate_delivery_order_checkout_fields() {
+ 
+    if ( empty( $_POST['billing_delivery']) )
+        wc_add_notice( __( 'Informe ao dia de entrega.' ), 'error' );
+}
+
+
+
+//update 
+add_action( 'woocommerce_checkout_update_order_meta', 'save_delivery_order_checkout_fields' );
+function save_delivery_order_checkout_fields( $order_id ) {
+    if ( ! empty( $_POST['billing_delivery'] ) ) {
+        update_post_meta( $order_id, 'Dia da Entrega', sanitize_text_field( $_POST['billing_delivery'] ) );
+    }
+}
+ 
+
+//View
+add_action( 'woocommerce_admin_order_data_after_billing_address', 'view_delivery_order_checkout_fields', 10, 1 );
+function view_delivery_order_checkout_fields($order){
+    echo '<p><h4><strong>'.__('Detalhes da entrega').'</strong> </h4>' . get_post_meta( $order->id, 'Dia da Entrega', true ) . '</p>';
+}
+
+
+//send mail
+add_filter('woocommerce_email_order_meta_keys', 'send_mail_delivery_order_checkout_fields');
+function send_mail_delivery_order_checkout_fields( $keys ) {
+    $keys[] = 'Data da Entrega:';
+    return $keys;
+}
+
